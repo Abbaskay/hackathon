@@ -1,6 +1,6 @@
-streamlit
-openrouteservice
-folium
-requests
-datetime
-json
+streamlit==1.27.2
+openrouteservice==2.3.3
+folium==0.14.0
+requests==2.31.0
+pandas==2.0.3
+
