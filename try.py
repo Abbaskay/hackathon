@@ -3,8 +3,10 @@ import openrouteservice
 import folium
 from streamlit_folium import st_folium
 import requests
-import datetime
+from datetime import datetime
 import json
+import os
+import pandas as pd
 
 # Set wide layout
 st.set_page_config(page_title="Smart Living App", layout="wide")
