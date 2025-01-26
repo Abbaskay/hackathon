@@ -194,6 +194,55 @@ elif st.session_state.page == "Travel":
             except Exception as e:
                 st.error(f"An error occurred: {e}")
 
+    # Update leaderboard
+    leaderboard = st.session_state.leaderboard
+    points = st.session_state.user_points.get(st.session_state.username, 0)
+    if st.session_state.username in leaderboard["User"].values:
+        leaderboard.loc[leaderboard["User"] == st.session_state.username, "Points"] += points
+    else:
+        new_entry = {"User": st.session_state.username, "Points": points}
+        st.session_state.leaderboard = pd.concat([leaderboard, pd.DataFrame([new_entry])], ignore_index=True)
+
+    st.session_state.leaderboard.sort_values(by="Points", ascending=False, inplace=True)
+    st.session_state.leaderboard.reset_index(drop=True, inplace=True)
+
+# Display the gamification interface
+st.title("Gamification for Sustainable Behavior")
+st.subheader("Log Your Eco-Friendly Activities")
+
+# User input for logging activities
+user_name = st.text_input("Enter your name:")
+activity = st.selectbox("Select an eco-friendly activity:", ["Walking", "Cycling", "Public Transport"])
+if st.button("Log Activity"):
+    if user_name and activity:
+        log_activity(user_name, activity)
+        st.success(f"{activity} logged! You've earned points!")
+    else:
+        st.warning("Please enter your name and select an activity.")
+
+# Display badges based on points
+st.subheader("Your Rewards")
+if user_name in st.session_state.user_points:
+    user_points = st.session_state.user_points[user_name]
+    st.write(f"Total Points: {user_points}")
+    
+    # Display badges based on milestones
+    if user_points >= 100:
+        st.write("🏆 **Gold Badge: Sustainability Champion!**")
+    elif user_points >= 50:
+        st.write("🥈 **Silver Badge: Eco Enthusiast!**")
+    elif user_points >= 20:
+        st.write("🥉 **Bronze Badge: Green Starter!**")
+    else:
+        st.write("🌱 Keep going! More rewards await!")
+
+# Display leaderboard
+st.subheader("Leaderboard")
+if not st.session_state.leaderboard.empty:
+    st.table(st.session_state.leaderboard)
+else:
+    st.write("No activities logged yet. Be the first to contribute!")
+
     # Display Results
     if st.session_state.travel_results:
         results = st.session_state.travel_results
