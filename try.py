@@ -3,9 +3,8 @@ import openrouteservice
 import folium
 from streamlit_folium import st_folium
 import requests
-from datetime import datetime
+import datetime
 import json
-import os
 import pandas as pd
 
 # Set wide layout
@@ -32,6 +31,11 @@ if "zen_results" not in st.session_state:
 
 if "traffic_reports" not in st.session_state:
     st.session_state.traffic_reports = []
+
+if "user_points" not in st.session_state:
+    st.session_state.user_points = {}
+if "leaderboard" not in st.session_state:
+    st.session_state.leaderboard = pd.DataFrame(columns=["User", "Points"])
 
 def navigate_to(page):
     st.session_state.page = page
@@ -64,7 +68,7 @@ def geocode_location(location):
     except Exception as e:
         st.error(f"Error during geocoding: {e}")
         return None, None
-
+    
 # Function to log eco-friendly activities
 def log_activity(user, activity_type):
     activity_points = {
@@ -196,7 +200,36 @@ elif st.session_state.page == "Travel":
             except Exception as e:
                 st.error(f"An error occurred: {e}")
 
-    # Update leaderboard
+    # Display Results
+    if st.session_state.travel_results:
+        results = st.session_state.travel_results
+        col1, col2 = st.columns([2, 1])
+
+        with col1:
+            # Map
+            route_map = folium.Map(location=[results["route"]["features"][0]["geometry"]["coordinates"][0][1],
+                                             results["route"]["features"][0]["geometry"]["coordinates"][0][0]],
+                                   zoom_start=12)
+            folium.GeoJson(results["route"], name="Route").add_to(route_map)
+            st.subheader("Route Map")
+            st_folium(route_map, width=700, height=500)
+
+        with col2:
+            # Route Information
+            st.subheader("Route and Environmental Insights")
+            st.write(f"**Route Distance**: {results['distance_km']:.2f} km")
+            st.write(f"**Carbon Footprint**: {results['carbon_footprint']:.2f} kg CO2")
+            st.write(f"**Origin AQI**: {results['origin_aqi']}")
+            st.write(f"**Destination AQI**: {results['dest_aqi']}")
+            st.write(f"**Origin Weather**: {results['origin_weather']['weather'][0]['description'].capitalize()}, {results['origin_weather']['main']['temp']}°C")
+            st.write(f"**Destination Weather**: {results['dest_weather']['weather'][0]['description'].capitalize()}, {results['dest_weather']['main']['temp']}°C")
+
+            # Eco-friendly Tips
+            st.subheader("Eco-friendly Tips")
+            for tip in results["eco_tips"]:
+                st.write(f"• {tip}")
+
+            # Update leaderboard
     leaderboard = st.session_state.leaderboard
     points = st.session_state.user_points.get(st.session_state.username, 0)
     if st.session_state.username in leaderboard["User"].values:
@@ -245,40 +278,11 @@ if not st.session_state.leaderboard.empty:
 else:
     st.write("No activities logged yet. Be the first to contribute!")
 
-    # Display Results
-    if st.session_state.travel_results:
-        results = st.session_state.travel_results
-        col1, col2 = st.columns([2, 1])
-
-        with col1:
-            # Map
-            route_map = folium.Map(location=[results["route"]["features"][0]["geometry"]["coordinates"][0][1],
-                                             results["route"]["features"][0]["geometry"]["coordinates"][0][0]],
-                                   zoom_start=12)
-            folium.GeoJson(results["route"], name="Route").add_to(route_map)
-            st.subheader("Route Map")
-            st_folium(route_map, width=700, height=500)
-
-        with col2:
-            # Route Information
-            st.subheader("Route and Environmental Insights")
-            st.write(f"**Route Distance**: {results['distance_km']:.2f} km")
-            st.write(f"**Carbon Footprint**: {results['carbon_footprint']:.2f} kg CO2")
-            st.write(f"**Origin AQI**: {results['origin_aqi']}")
-            st.write(f"**Destination AQI**: {results['dest_aqi']}")
-            st.write(f"**Origin Weather**: {results['origin_weather']['weather'][0]['description'].capitalize()}, {results['origin_weather']['main']['temp']}°C")
-            st.write(f"**Destination Weather**: {results['dest_weather']['weather'][0]['description'].capitalize()}, {results['dest_weather']['main']['temp']}°C")
-
-            # Eco-friendly Tips
-            st.subheader("Eco-friendly Tips")
-            for tip in results["eco_tips"]:
-                st.write(f"• {tip}")
-
-    if st.button("Back to Home"):
-        navigate_to("Home")
+if st.button("Back to Home"):
+            navigate_to("Home")
 
 # Smart School Route Planner
-elif st.session_state.page == "School":
+if st.session_state.page == "School":
     st.title("🚌 Smart School Route Planner")
     st.write("Optimize school routes for safety and eco-friendliness.")
 
