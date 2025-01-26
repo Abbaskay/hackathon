@@ -1,6 +1,7 @@
 streamlit==1.27.2
-openrouteservice==2.3.3
+streamlit_folium==0.13.0
 folium==0.14.0
+openrouteservice==2.3.3
 requests==2.31.0
 pandas==2.0.3
 
