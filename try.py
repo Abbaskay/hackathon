@@ -63,6 +63,19 @@ def geocode_location(location):
         st.error(f"Error during geocoding: {e}")
         return None, None
 
+# Function to log eco-friendly activities
+def log_activity(user, activity_type):
+    activity_points = {
+        "Walking": 10,
+        "Cycling": 15,
+        "Public Transport": 8,
+    }
+    points = activity_points.get(activity_type, 0)
+    
+    if user not in st.session_state.user_points:
+        st.session_state.user_points[user] = 0
+    st.session_state.user_points[user] += points
+
 
 # Pollution Data (AQI)
 def get_aqi(lat, lon):
